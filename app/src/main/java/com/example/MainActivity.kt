@@ -68,30 +68,6 @@ fun KisanApp(viewModel: KisanViewModel) {
     val selectedAnimal = livestockList.find { it.id == selectedAnimalId } ?: livestockList.firstOrNull()
     val selectedParcel = parcels.find { it.farmId == selectedFarmId } ?: parcels.firstOrNull()
 
-    val onboardingStep by viewModel.onboardingStep.collectAsStateWithLifecycle()
-    val draftName by viewModel.draftName.collectAsStateWithLifecycle()
-    val draftMobile by viewModel.draftMobile.collectAsStateWithLifecycle()
-    val draftFarmerId by viewModel.draftFarmerId.collectAsStateWithLifecycle()
-    val draftAadhaar by viewModel.draftAadhaar.collectAsStateWithLifecycle()
-    val isOtpSent by viewModel.isOtpSent.collectAsStateWithLifecycle()
-    val draftOtp by viewModel.draftOtp.collectAsStateWithLifecycle()
-    val isOtpVerified by viewModel.isOtpVerified.collectAsStateWithLifecycle()
-    val otpHelperMessage by viewModel.otpHelperMessage.collectAsStateWithLifecycle()
-    val draftAge by viewModel.draftAge.collectAsStateWithLifecycle()
-    val draftGender by viewModel.draftGender.collectAsStateWithLifecycle()
-    val draftFarmingType by viewModel.draftFarmingType.collectAsStateWithLifecycle()
-    val draftHouseNo by viewModel.draftHouseNo.collectAsStateWithLifecycle()
-    val draftLandmark by viewModel.draftLandmark.collectAsStateWithLifecycle()
-    val draftState by viewModel.draftState.collectAsStateWithLifecycle()
-    val draftDistrict by viewModel.draftDistrict.collectAsStateWithLifecycle()
-    val draftVillage by viewModel.draftVillage.collectAsStateWithLifecycle()
-    val draftPinCode by viewModel.draftPinCode.collectAsStateWithLifecycle()
-    val draftLatitude by viewModel.draftLatitude.collectAsStateWithLifecycle()
-    val draftLongitude by viewModel.draftLongitude.collectAsStateWithLifecycle()
-    val draftFarmsList by viewModel.draftFarmsList.collectAsStateWithLifecycle()
-    val draftBiggestProblem by viewModel.draftBiggestProblem.collectAsStateWithLifecycle()
-    val draftFinancialLossCause by viewModel.draftFinancialLossCause.collectAsStateWithLifecycle()
-    val draftAiMonitorPriorities by viewModel.draftAiMonitorPriorities.collectAsStateWithLifecycle()
 
     val isDoctorAnalyzing by viewModel.isDoctorAnalyzing.collectAsStateWithLifecycle()
     val doctorDiagnosis by viewModel.doctorDiagnosis.collectAsStateWithLifecycle()
@@ -104,95 +80,6 @@ fun KisanApp(viewModel: KisanViewModel) {
                 color = MaterialTheme.colorScheme.background
             ) {
             when (appState) {
-                AppNavState.SPLASH, AppNavState.LANGUAGE_SELECT -> {
-                    LanguageSelectScreen(
-                        selectedLanguage = currentLanguage,
-                        onLanguageSelected = { viewModel.setLanguage(it) },
-                        onContinue = { viewModel.setAppState(AppNavState.AUTH_LANDING) }
-                    )
-                }
-
-                AppNavState.AUTH_LANDING -> {
-                    AuthLandingScreen(
-                        currentLanguage = currentLanguage,
-                        isDarkTheme = isDarkTheme,
-                        onLanguageChange = { viewModel.setLanguage(it) },
-                        onThemeToggle = { viewModel.toggleTheme() },
-                        onCreateAccount = {
-                            viewModel.setOnboardingStep(1)
-                            viewModel.setAppState(AppNavState.ONBOARDING_WIZARD)
-                        },
-                        onLogin = {
-                            viewModel.setAppState(AppNavState.MAIN_APP)
-                        }
-                    )
-                }
-
-                AppNavState.ONBOARDING_WIZARD -> {
-                    OnboardingWizardScreen(
-                        currentStep = onboardingStep,
-                        name = draftName,
-                        onNameChange = { viewModel.draftName.value = it },
-                        mobile = draftMobile,
-                        onMobileChange = { viewModel.draftMobile.value = it },
-                        farmerId = draftFarmerId,
-                        onFarmerIdChange = { viewModel.draftFarmerId.value = it },
-                        aadhaar = draftAadhaar,
-                        onAadhaarChange = { viewModel.draftAadhaar.value = it },
-                        isOtpSent = isOtpSent,
-                        onSendOtp = { viewModel.sendOtp() },
-                        otpCode = draftOtp,
-                        onOtpCodeChange = { viewModel.draftOtp.value = it },
-                        isOtpVerified = isOtpVerified,
-                        onVerifyOtp = { viewModel.verifyOtp(it) },
-                        otpHelperMessage = otpHelperMessage,
-                        age = draftAge,
-                        onAgeChange = { viewModel.draftAge.value = it },
-                        gender = draftGender,
-                        onGenderChange = { viewModel.draftGender.value = it },
-                        farmingType = draftFarmingType,
-                        onFarmingTypeChange = { viewModel.draftFarmingType.value = it },
-                        houseNo = draftHouseNo,
-                        onHouseNoChange = { viewModel.draftHouseNo.value = it },
-                        landmark = draftLandmark,
-                        onLandmarkChange = { viewModel.draftLandmark.value = it },
-                        state = draftState,
-                        onStateChange = { viewModel.draftState.value = it },
-                        district = draftDistrict,
-                        onDistrictChange = { viewModel.draftDistrict.value = it },
-                        village = draftVillage,
-                        onVillageChange = { viewModel.draftVillage.value = it },
-                        pinCode = draftPinCode,
-                        onPinCodeChange = { viewModel.draftPinCode.value = it },
-                        latitude = draftLatitude,
-                        longitude = draftLongitude,
-                        onLocationPicked = { pState, pDist, pVill, pPin, lat, lng ->
-                            viewModel.draftState.value = pState
-                            viewModel.draftDistrict.value = pDist
-                            viewModel.draftVillage.value = pVill
-                            viewModel.draftPinCode.value = pPin
-                            viewModel.draftLatitude.value = lat
-                            viewModel.draftLongitude.value = lng
-                        },
-                        farmsList = draftFarmsList,
-                        onAddFarmDraft = { type -> viewModel.addFarmDraft(type) },
-                        onRemoveFarmDraft = { id -> viewModel.removeFarmDraft(id) },
-                        onUpdateFarmDraft = { updated -> viewModel.updateFarmDraft(updated) },
-                        biggestProblem = draftBiggestProblem,
-                        onBiggestProblemChange = { viewModel.draftBiggestProblem.value = it },
-                        financialLossCause = draftFinancialLossCause,
-                        onFinancialLossCauseChange = { viewModel.draftFinancialLossCause.value = it },
-                        aiPriorities = draftAiMonitorPriorities,
-                        onToggleAiPriority = { viewModel.toggleAiPriority(it) },
-                        onNextStep = { viewModel.setOnboardingStep(onboardingStep + 1) },
-                        onPrevStep = {
-                            if (onboardingStep > 1) viewModel.setOnboardingStep(onboardingStep - 1)
-                            else viewModel.setAppState(AppNavState.AUTH_LANDING)
-                        },
-                        onFinish = { viewModel.completeOnboarding() }
-                    )
-                }
-
                 AppNavState.MAIN_APP -> {
                     // Check SubScreens
                     when (currentSubScreen) {
@@ -318,6 +205,12 @@ fun KisanApp(viewModel: KisanViewModel) {
                                     viewModel.addNewCrop(name, variety, stage, isNewCrop, daysElapsed)
                                 },
                                 onBack = { viewModel.navigateBack() }
+                            )
+                        }
+                        SubScreen.CCTV_MONITOR -> {
+                            CctvMonitorScreen(
+                                onBack = { viewModel.navigateBack() },
+                                onOpenLog = { viewModel.navigateToSubScreen(SubScreen.ANIMAL_DETAIL) }
                             )
                         }
                         SubScreen.SETTINGS -> {

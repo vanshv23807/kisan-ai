@@ -14,10 +14,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 enum class AppNavState {
-    SPLASH,
-    LANGUAGE_SELECT,
-    AUTH_LANDING,
-    ONBOARDING_WIZARD,
     MAIN_APP
 }
 
@@ -45,15 +41,15 @@ enum class SubScreen {
     USER_PROFILE,
     WEATHER_REPORT,
     GOVT_SCHEMES,
-    CROP_GROWTH_TRACKER
+    CROP_GROWTH_TRACKER,
+    CCTV_MONITOR
 }
 
 class KisanViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: KisanRepository
 
-    // App State Navigation
-    private val _appState = MutableStateFlow(AppNavState.LANGUAGE_SELECT)
+    private val _appState = MutableStateFlow(AppNavState.MAIN_APP)
     val appState: StateFlow<AppNavState> = _appState.asStateFlow()
 
     private val _currentTab = MutableStateFlow(MainTab.HOME)
@@ -75,48 +71,7 @@ class KisanViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentLanguage = MutableStateFlow(AppLanguage.ENGLISH)
     val currentLanguage: StateFlow<AppLanguage> = _currentLanguage.asStateFlow()
 
-    // Onboarding Wizard State
-    private val _onboardingStep = MutableStateFlow(1)
-    val onboardingStep: StateFlow<Int> = _onboardingStep.asStateFlow()
 
-    // Step 1: Farmer Identity, OTP & Demographic State
-    val draftName = MutableStateFlow("")
-    val draftMobile = MutableStateFlow("")
-    val draftFarmerId = MutableStateFlow("")
-    val draftAadhaar = MutableStateFlow("")
-    val draftAge = MutableStateFlow("")
-    val draftGender = MutableStateFlow("Male")
-    val draftFarmingType = MutableStateFlow("Full-Time")
-    val isOtpSent = MutableStateFlow(false)
-    val draftOtp = MutableStateFlow("")
-    val isOtpVerified = MutableStateFlow(false)
-    val otpHelperMessage = MutableStateFlow<String?>(null)
-
-    // Step 2: Address, Map Coordinates & State
-    val draftHouseNo = MutableStateFlow("")
-    val draftLandmark = MutableStateFlow("")
-    val draftState = MutableStateFlow("")
-    val draftDistrict = MutableStateFlow("")
-    val draftVillage = MutableStateFlow("")
-    val draftPinCode = MutableStateFlow("")
-    val draftLatitude = MutableStateFlow(30.8987)
-    val draftLongitude = MutableStateFlow(75.8573)
-    val isMapPickerOpen = MutableStateFlow(false)
-
-    // Step 3: Multi-Farm System Drafts (starts empty so user sees "+ Add Farm" button)
-    val draftFarmsList = MutableStateFlow<List<FarmDraftItem>>(emptyList())
-
-    // Step 4: Farmer's Challenges & AI Requirements (Selecting-based)
-    val draftBiggestProblem = MutableStateFlow("")
-    val draftFinancialLossCause = MutableStateFlow("")
-    val draftAiMonitorPriorities = MutableStateFlow(emptySet<String>())
-    val draftAiMode = MutableStateFlow("Text & Voice")
-
-    // Legacy / Backward Compat State
-    val draftTotalArea = MutableStateFlow("18.5")
-    val draftAreaUnit = MutableStateFlow("Acres")
-    val draftParcelCount = MutableStateFlow(3)
-    val selectedDraftCrops = MutableStateFlow(setOf("Wheat", "Mustard"))
 
     // Crop Doctor State
     val doctorSelectedCrop = MutableStateFlow("Wheat")
@@ -840,256 +795,7 @@ class KisanViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun setOnboardingStep(step: Int) {
-        _onboardingStep.value = step
-    }
 
-    // OTP actions
-    fun sendOtp() {
-        isOtpSent.value = true
-        draftOtp.value = "5892" // Auto-fill code for effortless testing
-        otpHelperMessage.value = "OTP sent to +91 ${draftMobile.value}. Use code 5892."
-    }
-
-    fun verifyOtp(code: String) {
-        if (code == "5892" || code.length >= 4) {
-            isOtpVerified.value = true
-            otpHelperMessage.value = "Mobile number verified successfully!"
-        } else {
-            otpHelperMessage.value = "Invalid OTP. Please try 5892."
-        }
-    }
-
-    // Multi-farm management
-    fun addFarmDraft(type: String = "Agriculture") {
-        val current = draftFarmsList.value.toMutableList()
-        val newIndex = current.size + 1
-        val defaultName = when (type) {
-            "Poultry" -> "Poultry Unit #$newIndex"
-            "Cattle / Dairy" -> "Dairy Barn #$newIndex"
-            "Goat / Sheep" -> "Goat & Sheep Pen #$newIndex"
-            "Fish / Aquaculture" -> "Fish Pond #$newIndex"
-            "Beekeeping" -> "Honey Apiary #$newIndex"
-            "Horticulture / Fruit" -> "Orchard Garden #$newIndex"
-            "Vegetable" -> "Vegetable Greenhouse #$newIndex"
-            "Mushroom" -> "Mushroom Shed #$newIndex"
-            "Nursery" -> "Plant Nursery #$newIndex"
-            "Organic" -> "Organic Plot #$newIndex"
-            else -> "Farm Plot #$newIndex"
-        }
-        current.add(
-            FarmDraftItem(
-                id = "farm_draft_${System.currentTimeMillis()}",
-                name = defaultName,
-                type = type,
-                area = "5.0",
-                unit = "Acres",
-                ownership = "Owned",
-                waterAvailability = "Moderate / Seasonal",
-                soilOrHousingType = if (type == "Poultry") "Deep Litter Shed" else if (type == "Cattle / Dairy") "Ventilated Free Stall" else "Loamy Soil",
-                primaryCropOrLivestock = if (type == "Poultry") "Broiler (500 Birds)" else if (type == "Cattle / Dairy") "Gir Cows (8 Heads)" else "Paddy / Rice",
-                countOrYield = "1 Unit",
-                details = "Autonomous monitoring and sensor telemetry active."
-            )
-        )
-        draftFarmsList.value = current
-    }
-
-    fun removeFarmDraft(id: String) {
-        if (draftFarmsList.value.size > 1) {
-            draftFarmsList.value = draftFarmsList.value.filter { it.id != id }
-        }
-    }
-
-    fun updateFarmDraft(updated: FarmDraftItem) {
-        draftFarmsList.value = draftFarmsList.value.map { if (it.id == updated.id) updated else it }
-    }
-
-    fun toggleAiPriority(priority: String) {
-        val current = draftAiMonitorPriorities.value
-        draftAiMonitorPriorities.value = if (current.contains(priority)) current - priority else current + priority
-    }
-
-    fun completeOnboarding() {
-        viewModelScope.launch {
-            val finalPhone = if (draftMobile.value.startsWith("+91")) draftMobile.value else "+91 ${draftMobile.value}"
-            val newProfile = UserProfile(
-                id = "primary_user",
-                name = draftName.value.ifBlank { "Ramesh Kumar" },
-                phone = finalPhone,
-                farmerId = draftFarmerId.value.ifBlank { "PMK-9872-4102" },
-                aadhaarNumber = draftAadhaar.value.ifBlank { "5432 8765 0912" },
-                isPhoneVerified = isOtpVerified.value,
-                age = draftAge.value.toIntOrNull() ?: 38,
-                gender = draftGender.value,
-                farmingType = draftFarmingType.value,
-                houseNo = draftHouseNo.value,
-                landmark = draftLandmark.value,
-                state = draftState.value,
-                district = draftDistrict.value,
-                village = draftVillage.value,
-                pinCode = draftPinCode.value,
-                latitude = draftLatitude.value,
-                longitude = draftLongitude.value,
-                biggestProblem = draftBiggestProblem.value,
-                primaryGoal = "Maximize Profit, Yield & Resource Efficiency",
-                aiPreferredMode = "Text & Voice",
-                selectedLanguage = _currentLanguage.value.code,
-                isDarkTheme = _isDarkTheme.value,
-                isOnboardingComplete = true
-            )
-            repository.saveUserProfile(newProfile)
-
-            // Save user-configured farms from onboarding (or empty if 0 farms added)
-            repository.clearFarmsAndParcels()
-
-            val farmsToSave = draftFarmsList.value.mapIndexed { index, draft ->
-                val farmName = draft.name.trim().ifBlank {
-                    if (draft.type.isNotBlank()) "${draft.type} Farm ${index + 1}" else "Farm ${index + 1}"
-                }
-                val village = draft.village.ifBlank { draftVillage.value }
-                val district = draft.district.ifBlank { draftDistrict.value }
-                val state = draft.state.ifBlank { draftState.value }
-                val pin = draft.pinCode.ifBlank { draftPinCode.value }
-
-                val resolvedCoords = LocationCoordinatesHelper.resolveCoordinates(
-                    village = village,
-                    district = district,
-                    state = state,
-                    pinCode = pin,
-                    fallbackLat = draftLatitude.value,
-                    fallbackLng = draftLongitude.value
-                )
-
-                val assessment = FarmHealthCalculator.calculateHealth(
-                    farmType = draft.type.ifBlank { "Agriculture" },
-                    primaryCropOrAnimal = draft.primaryCropOrLivestock.ifBlank { "Wheat" },
-                    soilType = draft.soilOrHousingType.ifBlank { "Loamy Alluvial" },
-                    soilTestingStatus = draft.soilTestingStatus.ifBlank { "Recent Test (Within 6 Months)" },
-                    fertilizerPractice = draft.fertilizerPractice.ifBlank { "Balanced Organic + NPK" },
-                    drainageCondition = draft.drainageCondition.ifBlank { "Excellent (No Waterlogging)" },
-                    waterSource = draft.waterAvailability.ifBlank { "Borewell & Solar Pump" },
-                    pestPressure = draft.pestPressure.ifBlank { "None (Clean & Healthy)" },
-                    diseaseSigns = draft.diseaseSigns.ifBlank { "No Disease Signs (Vibrant Green)" },
-                    seedQuality = draft.seedQuality.ifBlank { "Certified Hybrid / Govt Verified" },
-                    boundaryFencing = draft.boundaryFencing.ifBlank { "Solar / Wire Fenced" }
-                )
-
-                Farm(
-                    id = "farm_${System.currentTimeMillis()}_$index",
-                    name = farmName,
-                    farmType = draft.type.ifBlank { "Agriculture" },
-                    location = listOf(village, district, state).filter { it.isNotBlank() }.joinToString(", "),
-                    houseNo = draft.houseNo.ifBlank { draftHouseNo.value },
-                    landmark = draft.landmark.ifBlank { draftLandmark.value },
-                    village = village,
-                    district = district,
-                    state = state,
-                    pinCode = pin,
-                    latitude = resolvedCoords.latitude,
-                    longitude = resolvedCoords.longitude,
-                    totalArea = draft.area.toDoubleOrNull() ?: 5.0,
-                    unit = draft.unit.ifBlank { "Acres" },
-                    ownership = draft.ownership.ifBlank { "Ancestral Owned" },
-                    waterAvailability = draft.waterAvailability.ifBlank { "Borewell & Solar Pump" },
-                    soilType = draft.soilOrHousingType.ifBlank { "Loamy Alluvial" },
-                    terrain = "Plain / Flat",
-                    primaryCropOrAnimal = draft.primaryCropOrLivestock.ifBlank { "Wheat" },
-                    isPrimary = index == 0,
-                    healthScore = assessment.overallScore,
-                    healthStatus = assessment.status,
-                    soilTestingStatus = draft.soilTestingStatus.ifBlank { "Recent Test (Within 6 Months)" },
-                    fertilizerPractice = draft.fertilizerPractice.ifBlank { "Balanced Organic + NPK" },
-                    drainageCondition = draft.drainageCondition.ifBlank { "Excellent (No Waterlogging)" },
-                    waterSource = draft.waterAvailability.ifBlank { "Borewell & Solar Pump" },
-                    pestPressure = draft.pestPressure.ifBlank { "None (Clean & Healthy)" },
-                    diseaseSigns = draft.diseaseSigns.ifBlank { "No Disease Signs (Vibrant Green)" },
-                    seedQuality = draft.seedQuality.ifBlank { "Certified Hybrid / Govt Verified" },
-                    boundaryFencing = draft.boundaryFencing.ifBlank { "Solar / Wire Fenced" },
-                    soilHealthScore = assessment.soilScore,
-                    waterHealthScore = assessment.waterScore,
-                    pestHealthScore = assessment.pestScore,
-                    healthSummary = assessment.summary
-                )
-            }
-
-            if (farmsToSave.isNotEmpty()) {
-                repository.saveFarms(farmsToSave)
-                _selectedFarmId.value = farmsToSave.first().id
-
-                farmsToSave.forEachIndexed { i, farm ->
-                    val parcel = LandParcel(
-                        id = "parcel_${System.currentTimeMillis()}_$i",
-                        farmId = farm.id,
-                        name = "${farm.name} Main Parcel",
-                        area = farm.totalArea,
-                        currentCrop = farm.primaryCropOrAnimal,
-                        soilType = farm.soilType,
-                        ph = if (farm.soilType.contains("Black", true)) 7.2 else 6.8,
-                        nitrogen = (farm.soilHealthScore * 0.6).toInt().coerceIn(30, 85),
-                        phosphorus = (farm.soilHealthScore * 0.7).toInt().coerceIn(35, 80),
-                        potassium = (farm.soilHealthScore * 0.5).toInt().coerceIn(25, 75),
-                        organicMatter = if (farm.fertilizerPractice.contains("Organic", true)) 2.8 else 2.2,
-                        moisture = if (farm.waterHealthScore > 75) 68 else 45,
-                        overallSoilScore = farm.soilHealthScore,
-                        verifiedSampleDate = if (farm.soilTestingStatus.contains("Recent", true)) "Verified (Last 30 Days)" else "Not Certified"
-                    )
-                    repository.updateParcel(parcel)
-
-                    val zone = IrrigationZone(
-                        id = "zone_${System.currentTimeMillis()}_$i",
-                        farmId = farm.id,
-                        zoneName = "${farm.primaryCropOrAnimal} Sector A",
-                        cropName = farm.primaryCropOrAnimal,
-                        isRunning = false,
-                        remainingMinutes = 0,
-                        soilMoisture = if (farm.waterHealthScore > 70) 65 else 40,
-                        isSmartScheduleEnabled = true,
-                        scheduledTime = "06:00 AM",
-                        durationMinutes = 45,
-                        activeDaysSummary = "Daily",
-                        estimatedUsageLiters = 1200
-                    )
-                    repository.addIrrigationZone(zone)
-
-                    // Generate Dynamic Tasks based on Questionnaire
-                    val assessment = FarmHealthCalculator.calculateHealth(
-                        farmType = farm.farmType,
-                        primaryCropOrAnimal = farm.primaryCropOrAnimal,
-                        soilType = farm.soilType,
-                        soilTestingStatus = farm.soilTestingStatus,
-                        fertilizerPractice = farm.fertilizerPractice,
-                        drainageCondition = farm.drainageCondition,
-                        waterSource = farm.waterSource,
-                        pestPressure = farm.pestPressure,
-                        diseaseSigns = farm.diseaseSigns,
-                        seedQuality = farm.seedQuality,
-                        boundaryFencing = farm.boundaryFencing
-                    )
-
-                    assessment.generatedActionTasks.forEachIndexed { taskIndex, taskTemplate ->
-                        val task = FarmTask(
-                            id = "task_${System.currentTimeMillis()}_${i}_$taskIndex",
-                            farmId = farm.id,
-                            title = taskTemplate.title,
-                            description = taskTemplate.description,
-                            priority = taskTemplate.priority,
-                            priorityLabel = taskTemplate.priorityLabel,
-                            targetArea = farm.name,
-                            category = taskTemplate.category,
-                            whyReason = taskTemplate.whyReason,
-                            isCompleted = false
-                        )
-                        repository.addTask(task)
-                    }
-                }
-            } else {
-                _selectedFarmId.value = ""
-            }
-
-            _appState.value = AppNavState.MAIN_APP
-        }
-    }
 
     fun updateUserProfile(updated: UserProfile) {
         viewModelScope.launch {
