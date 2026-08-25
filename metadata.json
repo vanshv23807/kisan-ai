@@ -1,0 +1,7 @@
+{
+  "name": "KisanAI",
+  "description": "Autonomous AI-powered farm management and dynamic optimization platform for Indian farmers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
