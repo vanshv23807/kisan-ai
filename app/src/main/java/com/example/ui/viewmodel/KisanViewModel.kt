@@ -42,7 +42,9 @@ enum class SubScreen {
     WEATHER_REPORT,
     GOVT_SCHEMES,
     CROP_GROWTH_TRACKER,
-    CCTV_MONITOR
+    CCTV_MONITOR,
+    POULTRY_SCANNER,
+    MASTITIS_SCANNER
 }
 
 class KisanViewModel(application: Application) : AndroidViewModel(application) {

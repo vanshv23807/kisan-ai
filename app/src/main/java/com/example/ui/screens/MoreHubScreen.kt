@@ -113,6 +113,42 @@ fun MoreHubScreen(
 
         item {
             HubNavigationCard(
+                titleLine1 = "CowCatcherAI &",
+                titleLine2 = "CCTV Monitor",
+                subtitle = "Live CCTV AI feed for automated heat detection",
+                icon = Icons.Default.Videocam,
+                badge = "Live ML",
+                testTag = "hub_cctv_item",
+                onClick = { onNavigateSubScreen(SubScreen.CCTV_MONITOR) }
+            )
+        }
+
+        item {
+            HubNavigationCard(
+                titleLine1 = "Mastitis AI &",
+                titleLine2 = "Udder Scanner",
+                subtitle = "Scan udder photos to detect early-stage mastitis with AI",
+                icon = Icons.Default.Biotech,
+                badge = "AI Scan",
+                testTag = "hub_mastitis_item",
+                onClick = { onNavigateSubScreen(SubScreen.MASTITIS_SCANNER) }
+            )
+        }
+
+        item {
+            HubNavigationCard(
+                titleLine1 = "Poultry Audio AI &",
+                titleLine2 = "Cough Detector",
+                subtitle = "Detect respiratory disease via coop sound analysis",
+                icon = Icons.Default.GraphicEq,
+                badge = "Audio ML",
+                testTag = "hub_poultry_item",
+                onClick = { onNavigateSubScreen(SubScreen.POULTRY_SCANNER) }
+            )
+        }
+
+        item {
+            HubNavigationCard(
                 titleLine1 = "App Settings &",
                 titleLine2 = "Farmer Profile",
                 subtitle = "5 Languages, Light/Dark mode, Account",

@@ -213,6 +213,16 @@ fun KisanApp(viewModel: KisanViewModel) {
                                 onOpenLog = { viewModel.navigateToSubScreen(SubScreen.ANIMAL_DETAIL) }
                             )
                         }
+                        SubScreen.MASTITIS_SCANNER -> {
+                            MastitisScannerScreen(
+                                onBack = { viewModel.navigateBack() }
+                            )
+                        }
+                        SubScreen.POULTRY_SCANNER -> {
+                            PoultryScannerScreen(
+                                onBack = { viewModel.navigateBack() }
+                            )
+                        }
                         SubScreen.SETTINGS -> {
                             SettingsScreen(
                                 userProfile = userProfile,
