@@ -223,6 +223,11 @@ fun KisanApp(viewModel: KisanViewModel) {
                                 onBack = { viewModel.navigateBack() }
                             )
                         }
+                        SubScreen.VIRTUAL_FENCING -> {
+                            VirtualFencingScreen(
+                                onBack = { viewModel.navigateBack() }
+                            )
+                        }
                         SubScreen.SETTINGS -> {
                             SettingsScreen(
                                 userProfile = userProfile,

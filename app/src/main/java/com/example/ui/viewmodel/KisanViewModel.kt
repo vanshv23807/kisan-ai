@@ -44,7 +44,8 @@ enum class SubScreen {
     CROP_GROWTH_TRACKER,
     CCTV_MONITOR,
     POULTRY_SCANNER,
-    MASTITIS_SCANNER
+    MASTITIS_SCANNER,
+    VIRTUAL_FENCING
 }
 
 class KisanViewModel(application: Application) : AndroidViewModel(application) {

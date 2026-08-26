@@ -73,6 +73,11 @@ googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.W
 // Some unused dependencies are commented out below instead of being removed.
 // This makes it easy to add them back in the future if needed.
 dependencies {
+
+    implementation("org.tensorflow:tensorflow-lite-task-vision:0.4.4")
+
+    implementation("com.google.mlkit:image-labeling:17.0.8")
+
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)

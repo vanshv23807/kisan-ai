@@ -86,1014 +86,300 @@ fun HomeScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 12.dp, bottom = 90.dp)
     ) {
-        // Farmer Greeting Header (No farm selector dropdown underneath)
+// Today's Action Plan Card
         item {
-            Column(
+            val completedCount = tasks.count { it.isCompleted }
+            val totalCount = tasks.size
+            val progressVal = if (totalCount > 0) completedCount.toFloat() / totalCount.toFloat() else 0f
+
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onNavigateSubScreen(SubScreen.USER_PROFILE) }
+                    .clickable { onNavigateSubScreen(SubScreen.TASKS_LIST) },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(20.dp)
+                ) {
+                    Text(
+                        text = "Today's Action Plan",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (totalCount > 0) "$completedCount/$totalCount tasks completed" else "0/1 tasks completed",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Progress Bar
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryGreen),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                     ) {
-                        Text(
-                            text = (userProfile?.name ?: "R").take(1).uppercase(),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = "${t("namaste")}, ${userProfile?.name ?: "Ramesh"}",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                        Text(
-                            text = "Tap to view Farmer Profile • PM-KISAN ${userProfile?.farmerId ?: "PMK-9872"}",
-                            fontSize = 12.sp,
-                            color = PrimaryGreen,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-        }
-
-        // Today's Action Plan Card (Shown only when farms are added)
-        if (farms.isNotEmpty()) {
-            item {
-                val completedCount = tasks.count { it.isCompleted }
-                val totalCount = tasks.size
-                val pendingCount = totalCount - completedCount
-                val highPriorityCount = tasks.count { !it.isCompleted && it.priority.equals("High", ignoreCase = true) }
-                val progressVal = if (totalCount > 0) completedCount.toFloat() / totalCount.toFloat() else 1f
-
-                Card(
-                    modifier = Modifier
-                        .testTag("todays_action_plan_card")
-                        .fillMaxWidth()
-                        .clickable { onNavigateSubScreen(SubScreen.TASKS_LIST) },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.5.dp, PrimaryGreen.copy(alpha = 0.5f))
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(SecondaryContainerGreen),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Checklist,
-                                        contentDescription = null,
-                                        tint = PrimaryGreen,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "Today's Action Plan",
-                                        fontSize = 16.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = if (totalCount > 0) "$completedCount of $totalCount tasks completed" else "Daily priority checklist",
-                                        fontSize = 11.5.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-
-                            if (totalCount > 0) {
-                                Surface(
-                                    color = if (completedCount == totalCount) SecondaryContainerGreen else PrimaryGreen.copy(alpha = 0.12f),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = if (completedCount == totalCount) "✓ ALL DONE" else "$completedCount/$totalCount DONE",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = PrimaryGreen,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        // Progress Bar & Quick Status Pills
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            LinearProgressIndicator(
-                                progress = { progressVal },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(8.dp)
-                                    .clip(RoundedCornerShape(4.dp)),
-                                color = PrimaryGreen,
-                                trackColor = SecondaryContainerGreen
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (highPriorityCount > 0) Color(0xFFFEE2E2) else SecondaryContainerGreen,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = if (highPriorityCount > 0) Icons.Default.PriorityHigh else Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            tint = if (highPriorityCount > 0) Color(0xFFDC2626) else PrimaryGreen,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = if (highPriorityCount > 0) "$highPriorityCount High Priority" else "No Urgent Risks",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (highPriorityCount > 0) Color(0xFFDC2626) else PrimaryGreen
-                                        )
-                                    }
-                                }
-
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.PendingActions,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = if (pendingCount > 0) "$pendingCount Pending Items" else "Zero Pending",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Open Full Action Plan Action Button
-                        Button(
-                            onClick = { onNavigateSubScreen(SubScreen.TASKS_LIST) },
+                        Box(
                             modifier = Modifier
-                                .testTag("ask_details_button")
-                                .fillMaxWidth()
-                                .height(44.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Checklist,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Open Full Action Plan",
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Live Weather Block (GPS Linked)
-        item {
-            val activeFarm = farms.find { it.id == selectedFarmId } ?: farms.firstOrNull()
-            Card(
-                modifier = Modifier
-                    .testTag("current_weather_card")
-                    .fillMaxWidth()
-                    .clickable { onNavigateSubScreen(SubScreen.WEATHER_REPORT) },
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(imageVector = Icons.Default.CloudQueue, contentDescription = null, tint = PrimaryGreen)
-                            Text(
-                                text = "Live Farm Weather",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-
-                        if (activeFarm != null) {
-                            Surface(
-                                color = PrimaryGreen.copy(alpha = 0.12f),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = activeFarm.name,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = PrimaryGreen,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    if (activeFarm != null) {
-                        Text(
-                            text = "Location: ${if (activeFarm.village.isNotBlank()) activeFarm.village else activeFarm.location} (GPS: ${String.format("%.2f", activeFarm.latitude)}, ${String.format("%.2f", activeFarm.longitude)})",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Text(
-                            text = "No farm selected. Add farm coordinates on map to view live radar weather.",
-                            fontSize = 12.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                .fillMaxWidth(progressVal.coerceIn(0f, 1f))
+                                .fillMaxHeight()
+                                .background(Color(0xFF005C22))
                         )
                     }
 
+                    Spacer(modifier = Modifier.height(20.dp))
+
                     Button(
-                        onClick = { onNavigateSubScreen(SubScreen.WEATHER_REPORT) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("open_farm_weather_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
-                        shape = RoundedCornerShape(10.dp)
+                        onClick = { onNavigateSubScreen(SubScreen.TASKS_LIST) },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF004D1A)),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text(
-                            text = "View Live Weather and Radar",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.5.sp
-                        )
+                        Text("OPEN FULL PLAN", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp, color = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
                     }
                 }
             }
         }
 
-        // AI Crop Photo Growth & Disease Scanner Block
+        // Grid of 4 Cards
         item {
-            var showCropScannerModal by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .testTag("ai_crop_vision_scanner_card")
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Top Heading
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Row 1
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Weather
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.WEATHER_REPORT) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
                             Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SecondaryContainerGreen),
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFF80DEEA)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.CenterFocusStrong,
-                                    contentDescription = null,
-                                    tint = PrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.WbSunny, contentDescription = null, tint = Color(0xFF006064))
                             }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Weather", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text(
-                                text = "AI Crop & Disease Scanner",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = homeWeather?.let { "${it.conditionText}, ${it.currentTempC}°C" } ?: "Clear, 28°C",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             )
                         }
                     }
 
-                    Text(
-                        text = "Take or upload any field picture to detect crop type, growth stage %, days to harvest, and leaf disease health status.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Single Scan Crop Button
-                    Button(
-                        onClick = { showCropScannerModal = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("scan_crop_button"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                    // Crop Scan
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.CROP_DOCTOR) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Icon(imageVector = Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Scan Crop", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-            }
-
-            if (showCropScannerModal) {
-                AiCropVisionScannerDialog(
-                    onDismiss = { showCropScannerModal = false },
-                    onNavigateToCropDoctor = {
-                        showCropScannerModal = false
-                        onNavigateSubScreen(SubScreen.CROP_DOCTOR)
-                    }
-                )
-            }
-        }
-
-        // Smart Bluetooth Cattle Tracker & Pasture Fencing Alert Block
-        item {
-            val cattleList = remember(crops) {
-                listOf(
-                    Livestock(
-                        id = "c_01",
-                        farmId = selectedFarmId,
-                        name = "Kaveri (Gir Cow)",
-                        tagId = "TAG-101",
-                        type = "Cattle / Dairy",
-                        breed = "Gir Cow",
-                        ageYears = 4,
-                        barnSection = "North Barn",
-                        healthScore = 92,
-                        dailyMilkYield = 15.0,
-                        hasBleTracker = true,
-                        bleDeviceName = "KisanTrack-BLE-101",
-                        isInsideFence = true,
-                        distanceMetersFromCenter = 42,
-                        fenceRadiusMeters = 150,
-                        lastPingTime = "1 min ago",
-                        batteryPercent = 91
-                    ),
-                    Livestock(
-                        id = "c_02",
-                        farmId = selectedFarmId,
-                        name = "Ganga (Murrah Buffalo)",
-                        tagId = "TAG-102",
-                        type = "Cattle / Dairy",
-                        breed = "Murrah Buffalo",
-                        ageYears = 5,
-                        barnSection = "Pasture 2",
-                        healthScore = 86,
-                        dailyMilkYield = 18.2,
-                        hasBleTracker = true,
-                        bleDeviceName = "KisanTrack-BLE-102",
-                        isInsideFence = false, // Straying / Beyond Fence Alert!
-                        distanceMetersFromCenter = 178,
-                        fenceRadiusMeters = 150,
-                        lastPingTime = "Just now",
-                        batteryPercent = 74
-                    ),
-                    Livestock(
-                        id = "c_03",
-                        farmId = selectedFarmId,
-                        name = "Laxmi (Sahiwal Cow)",
-                        tagId = "TAG-103",
-                        type = "Cattle / Dairy",
-                        breed = "Sahiwal Cow",
-                        ageYears = 3,
-                        barnSection = "East Grazing Field",
-                        healthScore = 88,
-                        dailyMilkYield = 13.5,
-                        hasBleTracker = false, // No device attached
-                        bleDeviceName = "None",
-                        isInsideFence = true,
-                        distanceMetersFromCenter = 0,
-                        fenceRadiusMeters = 150,
-                        lastPingTime = "No Signal",
-                        batteryPercent = 0
-                    )
-                )
-            }
-
-            var showCattleTrackingModal by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .testTag("cattle_fence_tracker_card")
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Top Heading
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
                             Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SecondaryContainerGreen),
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFF8D6E63)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Sensors,
-                                    contentDescription = null,
-                                    tint = PrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.DocumentScanner, contentDescription = null, tint = Color.White)
                             }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Crop Scan", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text(
-                                text = "Cattle Track & Fencing Alert",
-                                fontSize = 15.5.sp,
+                                text = "Check health",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+
+                // Row 2
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Livestock
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.LIVESTOCK_LIST) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+                            Box(
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(PrimaryGreen),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Sensors, contentDescription = null, tint = Color.White)
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Livestock", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(
+                                text = "2 alerts",
+                                fontSize = 12.sp,
+                                color = PrimaryGreen,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             )
                         }
                     }
 
-                    val hasCattle = cattleList.isNotEmpty()
-                    Text(
-                        text = if (hasCattle) "Real-time Bluetooth cattle collar tracking. Instant alerts if any livestock crosses the 150m farm perimeter fence."
-                        else "No cattle added yet. Add livestock to enable Bluetooth collar tracking and pasture geofencing alerts.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Single Track Animal Button
-                    Button(
-                        onClick = {
-                            if (hasCattle) {
-                                showCattleTrackingModal = true
-                            } else {
-                                onNavigateSubScreen(SubScreen.ADD_ANIMAL)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("track_animal_button"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                    // Payouts
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.GOVT_SCHEMES) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Icon(imageVector = if (hasCattle) Icons.Default.Pets else Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(if (hasCattle) "Track Animal" else "Add Cattle First", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-            }
-
-            if (showCattleTrackingModal) {
-                CattleTrackingModalDialog(
-                    cattleList = cattleList,
-                    onDismiss = { showCattleTrackingModal = false },
-                    onPairNewCattle = {
-                        showCattleTrackingModal = false
-                        onNavigateSubScreen(SubScreen.ADD_ANIMAL)
-                    }
-                )
-            }
-        }
-
-        // Crop Insurance & Govt Payout Support Block
-        item {
-            val hasFarm = farms.isNotEmpty()
-            var showInsuranceModal by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .testTag("crop_insurance_home_card")
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Top Heading
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
                             Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SecondaryContainerGreen),
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Shield,
-                                    contentDescription = null,
-                                    tint = PrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.Shield, contentDescription = null, tint = Color(0xFF424242))
                             }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Payouts", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text(
-                                text = "Crop Insurance & Govt Payouts",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = "View relief",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+
+                // Row 3
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Mastitis AI
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.MASTITIS_SCANNER) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+                            Box(
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFFFCDD2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.MedicalServices, contentDescription = null, tint = Color(0xFFC62828))
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Mastitis AI", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(
+                                text = "Scan udders",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             )
                         }
                     }
 
-                    Text(
-                        text = if (hasFarm) "Protect your crop against floods, hailstorms, pests & drought with PMFBY insurance or SDRF disaster relief compensation."
-                        else "No farm added yet. Add a farm with its address/location to check PMFBY insurance schemes, active policy coverage, and disaster payouts.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Single Clean Button
-                    Button(
-                        onClick = {
-                            if (hasFarm) {
-                                showInsuranceModal = true
-                            } else {
-                                onNavigateTab(MainTab.FARMS)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("apply_crop_insurance_button"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                    // Poultry Audio
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.POULTRY_SCANNER) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Icon(imageVector = if (hasFarm) Icons.Default.Shield else Icons.Default.AddLocationAlt, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (hasFarm) "Get Crop Insurance & Disaster Relief" else "Add Farm First",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-
-            // Interactive Questionnaire Dialog for Crop Insurance & Claims
-            if (showInsuranceModal) {
-                CropInsuranceAssessmentDialog(
-                    farms = farms,
-                    onDismiss = { showInsuranceModal = false },
-                    onNavigateToFarms = {
-                        showInsuranceModal = false
-                        onNavigateTab(MainTab.FARMS)
-                    }
-                )
-            }
-        }
-
-        // Crop Growth Tracker Card
-        item {
-            val hasFarm = farms.isNotEmpty()
-            Card(
-                modifier = Modifier
-                    .testTag("crop_growth_tracker_home_card")
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Heading
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
                             Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SecondaryContainerGreen),
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFFFF9C4)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Timeline,
-                                    contentDescription = null,
-                                    tint = PrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.Mic, contentDescription = null, tint = Color(0xFFF57F17))
                             }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Poultry Audio", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text(
-                                text = "Crop Growth Tracker",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = "Listen sounds",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            )
+                        }
+                    }
+                }
+
+                // Row 4
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // CowCatcher AI
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.CCTV_MONITOR) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
+                            Box(
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFE1BEE7)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.Videocam, contentDescription = null, tint = Color(0xFF6A1B9A))
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("CowCatcher", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text(
+                                text = "Live CCTV",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             )
                         }
                     }
 
-                    Text(
-                        text = if (hasFarm) "Track growth from sowing to harvest with stage progression, milestone advice & field notes."
-                        else "No farm added yet. Add a farm and sown crops to track growth progression, milestone advice & field notes.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Button(
-                        onClick = {
-                            if (hasFarm) {
-                                onNavigateSubScreen(SubScreen.CROP_GROWTH_TRACKER)
-                            } else {
-                                onNavigateTab(MainTab.FARMS)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("crop_growth_tracker_button"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
+                    // Virtual Fencing
+                    Card(
+                        modifier = Modifier.weight(1f).aspectRatio(1f).clickable { onNavigateSubScreen(SubScreen.VIRTUAL_FENCING) },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant)
                     ) {
-                        Icon(imageVector = if (hasFarm) Icons.Default.Timeline else Icons.Default.AddLocationAlt, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (hasFarm) "Track Crop Progress & Milestones" else "Add Farm First",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-        }
-
-        // Government News & Schemes Feature Card
-        item {
-            Card(
-                modifier = Modifier
-                    .testTag("govt_news_home_card")
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Heading
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxSize()) {
                             Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SecondaryContainerGreen),
+                                modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFFFCC80)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountBalance,
-                                    contentDescription = null,
-                                    tint = PrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Default.Timeline, contentDescription = null, tint = Color(0xFFE65100))
                             }
+                            Spacer(modifier = Modifier.weight(1f))
+                            Text("Virtual Fence", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                             Text(
-                                text = "Government Schemes & News",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                text = "Geo-AI",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
                             )
                         }
                     }
-
-                    Text(
-                        text = "Explore latest central & state agriculture schemes, PM-KUSUM solar subsidies, KCC loans, and MSP updates.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Single Explore Button
-                    Button(
-                        onClick = { onNavigateSubScreen(SubScreen.GOVT_SCHEMES) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("explore_govt_schemes_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.AccountBalance, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Explore Government Schemes", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
-                    }
                 }
             }
         }
-
-        // Bank Accounts & Credit Card (Clean Home Card -> Prompts Bank Details if not given, else shows full details inside)
-        item {
-            var farmerBankInfo by remember { mutableStateOf<FarmerBankDetails?>(null) }
-            var showBankInputDialog by remember { mutableStateOf(false) }
-            var showBankAccountsDialog by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("govt_dbt_benefits_home_card"),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Heading at Top of Box
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(SecondaryContainerGreen),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountBalanceWallet,
-                                    contentDescription = null,
-                                    tint = PrimaryGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Text(
-                                text = "Bank Accounts & Credit",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = "Link your bank account for Direct Benefit Transfer (DBT), PM-KISAN subsidy, and Kisan Credit Card (KCC) credit limits.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Single Clean Accounts Button
-                    Button(
-                        onClick = {
-                            if (farmerBankInfo == null) {
-                                showBankInputDialog = true
-                            } else {
-                                showBankAccountsDialog = true
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("bank_accounts_button"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen)
-                    ) {
-                        Icon(imageVector = Icons.Default.AccountBalanceWallet, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (farmerBankInfo == null) "Accounts & Link Bank Details" else "Accounts (${farmerBankInfo?.bankName ?: "Linked"})",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-
-            // Input Dialog if Bank Details not yet provided
-            if (showBankInputDialog) {
-                BankDetailsInputDialog(
-                    initialHolderName = userProfile?.name ?: "Ramesh Kumar",
-                    onDismiss = { showBankInputDialog = false },
-                    onSave = { details ->
-                        farmerBankInfo = details
-                        showBankInputDialog = false
-                        showBankAccountsDialog = true
-                    }
-                )
-            }
-
-            // Full Accounts & Credits Details Dialog if Bank Details are provided
-            if (showBankAccountsDialog && farmerBankInfo != null) {
-                BankAccountsAndCreditsDialog(
-                    bankDetails = farmerBankInfo!!,
-                    onDismiss = { showBankAccountsDialog = false },
-                    onEditBankDetails = {
-                        showBankAccountsDialog = false
-                        showBankInputDialog = true
-                    }
-                )
-            }
-        }
-
-        // Farmer Emergency & Govt Helpline Card
-        item {
-            var showHelplinesModal by remember { mutableStateOf(false) }
-            var showCropDamageDialog by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier
-                    .testTag("govt_helpline_card")
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Heading
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(AlertRedContainer),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PhoneInTalk,
-                                    contentDescription = null,
-                                    tint = AlertRed,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Text(
-                                text = "Farmer Emergency & Helplines",
-                                fontSize = 15.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = "24x7 Toll-Free & Direct Emergency Helplines for crop loss, disaster compensation, expert Kisan advice & animal emergency.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Single Help / Call Helplines Button
-                    Button(
-                        onClick = { showHelplinesModal = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(42.dp)
-                            .testTag("help_helplines_button"),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AlertRed)
-                    ) {
-                        Icon(imageVector = Icons.Default.PhoneInTalk, contentDescription = null, modifier = Modifier.size(17.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Help & Emergency Helplines",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-
-            if (showHelplinesModal) {
-                FarmerEmergencyHelplinesDialog(
-                    onDismiss = { showHelplinesModal = false },
-                    onReportDamageClick = {
-                        showHelplinesModal = false
-                        showCropDamageDialog = true
-                    }
-                )
-            }
-
-            if (showCropDamageDialog) {
-                val context = LocalContext.current
-                CropDamageReportDialog(
-                    farms = farms,
-                    onDismiss = { showCropDamageDialog = false },
-                    onCallOfficial = { number ->
-                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number"))
-                        context.startActivity(intent)
-                        showCropDamageDialog = false
-                    }
-                )
-            }
-        }
-
 
     }
-}
+
+    }
 
 @Composable
 private fun HelplineRowItem(
@@ -1134,9 +420,10 @@ private fun HelplineRowItem(
                 }
             }
         }
-    }
+
 }
 
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CropDamageReportDialog(
@@ -2310,11 +1597,12 @@ fun CattleTrackingModalDialog(
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(10.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(
+                                        modifier = Modifier.weight(1f),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {

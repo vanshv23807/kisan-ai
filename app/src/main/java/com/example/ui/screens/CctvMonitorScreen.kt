@@ -76,7 +76,34 @@ fun CctvMonitorScreen(
                     ),
                 contentAlignment = Alignment.Center
             ) {
+                // VideoView for both thumbnail preview and playback
+                // We use key(isPlaying) to force AndroidView to recreate when state changes,
+                // avoiding VideoView seekTo/start bugs.
+                androidx.compose.runtime.key(isPlaying, useMountingVideo) {
+                    androidx.compose.ui.viewinterop.AndroidView(
+                        factory = { context ->
+                            android.widget.VideoView(context).apply {
+                                val rawId = if (useMountingVideo) com.example.R.raw.cctv_mounting else com.example.R.raw.cctv
+                                val uri = android.net.Uri.parse("android.resource://${context.packageName}/$rawId")
+                                setVideoURI(uri)
+                                setOnPreparedListener { mp ->
+                                    mp.isLooping = true
+                                    if (isPlaying) {
+                                        start()
+                                    } else {
+                                        seekTo(100)
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
                 if (!isPlaying) {
+                    // Semi-transparent overlay to make play button and text more visible over the thumbnail
+                    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)))
+                    
                     IconButton(
                         onClick = { isPlaying = true },
                         modifier = Modifier
@@ -91,30 +118,13 @@ fun CctvMonitorScreen(
                         )
                     }
                     Text(
-                        "Click to Start Camera Feed\n(For Demo: Place video in res/raw/cctv.mp4)",
-                        color = Color.Gray,
+                        "Click to Start Camera Feed",
+                        color = Color.White,
                         fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.BottomCenter).padding(8.dp)
                     )
                 } else {
-                    // Actual Video Playing
-                    androidx.compose.ui.viewinterop.AndroidView(
-                        factory = { context ->
-                            android.widget.VideoView(context).apply {
-                                setOnPreparedListener { mp ->
-                                    mp.isLooping = true
-                                    start()
-                                }
-                            }
-                        },
-                        update = { videoView ->
-                            val rawId = if (useMountingVideo) com.example.R.raw.cctv_mounting else com.example.R.raw.cctv
-                            val uri = android.net.Uri.parse("android.resource://${videoView.context.packageName}/$rawId")
-                            videoView.setVideoURI(uri)
-                        },
-                        modifier = Modifier.fillMaxSize()
-                    )
-
                     // LIVE indicator
                     Text(
                         "LIVE REC 🔴",

@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -75,11 +76,11 @@ fun KisanTopAppBar(
                             .clickable { onAvatarClick() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "R",
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontSize = 17.sp
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }

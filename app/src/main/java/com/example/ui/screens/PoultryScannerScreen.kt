@@ -32,9 +32,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.asRequestBody
+import android.media.AudioFormat
+import android.media.AudioRecord
+
+import org.pytorch.LiteModuleLoader
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
@@ -52,6 +53,8 @@ fun PoultryScannerScreen(
     var resultLabel by remember { mutableStateOf<String?>(null) }
     var resultConfidence by remember { mutableFloatStateOf(0f) }
     var hasPermission by remember { mutableStateOf(false) }
+    var recordingSeconds by remember { mutableIntStateOf(0) }
+    val maxRecordingSeconds = 45
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -114,7 +117,7 @@ fun PoultryScannerScreen(
                             color = InfoBlue
                         )
                         Text(
-                            text = "Record 5 seconds of coop audio to detect respiratory disease via HuggingFace ML.",
+                            text = "Record up to 45 seconds of coop audio. Tap to stop early. AI analyses the full session for respiratory disease.",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 16.sp
@@ -133,29 +136,34 @@ fun PoultryScannerScreen(
                     .background(if (isRecording) AlertRed.copy(alpha = 0.1f) else PrimaryGreen.copy(alpha = 0.1f))
                     .clickable(enabled = !isAnalyzing && hasPermission) {
                         if (isRecording) {
-                            // Manual stop triggered
+                            // User pressed stop manually before 45s
                             isRecording = false
                         } else {
                             coroutineScope.launch {
                                 isRecording = true
+                                recordingSeconds = 0
                                 resultLabel = null
-                                // 1. Start Recording
-                                val audioFile = startRecording(context)
-                                
-                                // 2. Wait up to 45 seconds, checking if user stopped it manually
-                                var timeElapsed = 0
-                                while (isRecording && timeElapsed < 45000) {
-                                    delay(100)
-                                    timeElapsed += 100
+
+                                // Launch a live-timer coroutine in parallel
+                                val timerJob = launch {
+                                    while (isRecording && recordingSeconds < maxRecordingSeconds) {
+                                        delay(1000)
+                                        recordingSeconds++
+                                        if (recordingSeconds >= maxRecordingSeconds) {
+                                            isRecording = false
+                                        }
+                                    }
                                 }
-                                
-                                // 3. Stop Recording
+
+                                // Record audio (blocks until isRecording=false or max duration)
+                                val audioData = recordAudioWithDuration(context, maxRecordingSeconds) { isRecording }
+
+                                timerJob.cancel()
                                 isRecording = false
-                                stopRecording()
                                 isAnalyzing = true
-                                
-                                // 4. Send to Local Flask Server
-                                val result = uploadAudioForAnalysis(audioFile)
+
+                                // Analyze by sliding 1.5s windows over the full recording
+                                val result = analyzeAudioLocally(context, audioData)
                                 resultLabel = result.first
                                 resultConfidence = result.second
                                 isAnalyzing = false
@@ -195,22 +203,46 @@ fun PoultryScannerScreen(
             Text(
                 text = when {
                     !hasPermission -> "Microphone permission required"
-                    isRecording -> "Recording... (Keep phone near flock)"
-                    isAnalyzing -> "Sending to ML Server..."
+                    isRecording -> "Recording... ${recordingSeconds}s / ${maxRecordingSeconds}s  (Tap to stop early)"
+                    isAnalyzing -> "Analyzing audio with AI..."
                     else -> "Tap to Listen to Flock"
                 },
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = if (isRecording) AlertRed else Color.Gray
+                color = if (isRecording) AlertRed else Color.Gray,
+                textAlign = TextAlign.Center
             )
+
+            // Progress bar while recording
+            if (isRecording) {
+                LinearProgressIndicator(
+                    progress = { recordingSeconds.toFloat() / maxRecordingSeconds.toFloat() },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    color = AlertRed,
+                    trackColor = AlertRed.copy(alpha = 0.2f)
+                )
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             // Results UI
             AnimatedVisibility(visible = resultLabel != null) {
+                val isNoAudio = resultLabel?.startsWith("NO_AUDIO") == true
                 val isHealthy = resultLabel == "Healthy"
-                val bgColor = if (isHealthy) SecondaryContainerGreen else AlertRedContainer
-                val iconColor = if (isHealthy) PrimaryGreen else AlertRed
+                val isError = resultLabel?.startsWith("ERR") == true
+                
+                val debugRms = if (isNoAudio) resultLabel?.substringAfter("NO_AUDIO_") else null
+
+                val bgColor = when {
+                    isNoAudio || isError -> Color(0xFFFFF3E0) // orange container
+                    isHealthy -> SecondaryContainerGreen
+                    else -> AlertRedContainer
+                }
+                val iconColor = when {
+                    isNoAudio || isError -> Color(0xFFE65100) // deep orange
+                    isHealthy -> PrimaryGreen
+                    else -> AlertRed
+                }
                 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -222,38 +254,51 @@ fun PoultryScannerScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = if (isHealthy) Icons.Default.CheckCircle else Icons.Default.Warning,
+                            imageVector = when {
+                                isNoAudio || isError -> Icons.Default.Info
+                                isHealthy -> Icons.Default.CheckCircle
+                                else -> Icons.Default.Warning
+                            },
                             contentDescription = null,
                             tint = iconColor,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Analysis: ${resultLabel?.uppercase()}",
+                            text = when {
+                                isNoAudio -> "No Audio Detected"
+                                isError -> "Analysis Error"
+                                else -> "Analysis: ${resultLabel?.uppercase()}"
+                            },
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
                             color = iconColor
                         )
-                        Text(
-                            text = "Confidence: ${(resultConfidence * 100).toInt()}%",
-                            fontSize = 14.sp,
-                            color = Color.DarkGray
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        if (!isHealthy) {
+                        if (!isNoAudio && !isError) {
                             Text(
-                                "Respiratory distress / coughing detected in the audio sample. Isolate affected birds and consult a vet.",
-                                textAlign = TextAlign.Center,
-                                fontSize = 13.sp
+                                text = "Confidence: ${(resultConfidence * 100).toInt()}%",
+                                fontSize = 14.sp,
+                                color = Color.DarkGray
                             )
-                        } else {
+                        } else if (isNoAudio && debugRms != null) {
                             Text(
-                                "Flock vocalizations sound normal. No widespread respiratory issues detected.",
-                                textAlign = TextAlign.Center,
-                                fontSize = 13.sp
+                                text = "Debug Audio Level (RMS): $debugRms",
+                                fontSize = 12.sp,
+                                color = Color.Gray
                             )
                         }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = when {
+                                isNoAudio -> "No chicken vocalizations detected. Please hold your phone closer to the flock and ensure the birds are vocalizing."
+                                isError -> "Something went wrong. Please try again."
+                                !isHealthy -> "Respiratory distress / coughing detected in the audio sample. Isolate affected birds and consult a vet."
+                                else -> "Flock vocalizations sound normal. No widespread respiratory issues detected."
+                            },
+                            textAlign = TextAlign.Center,
+                            fontSize = 13.sp
+                        )
                     }
                 }
             }
@@ -262,79 +307,129 @@ fun PoultryScannerScreen(
 }
 
 // ── Audio Recording Logic ──
-private var mediaRecorder: MediaRecorder? = null
+private const val SAMPLE_RATE = 22050
+private const val WINDOW_SAMPLES = 33075 // 1.5 seconds per window
 
-private fun startRecording(context: Context): File {
-    val outputFile = File(context.cacheDir, "poultry_audio.mp4")
-    mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        MediaRecorder(context)
-    } else {
-        @Suppress("DEPRECATION")
-        MediaRecorder()
-    }.apply {
-        setAudioSource(MediaRecorder.AudioSource.MIC)
-        setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-        setOutputFile(outputFile.absolutePath)
-        try {
-            prepare()
-            start()
-        } catch (e: IOException) {
-            Log.e("AudioRecord", "prepare() failed")
-        }
-    }
-    return outputFile
-}
+/**
+ * Records audio for up to [maxSeconds] seconds, or until [isStillRecording] returns false.
+ * Returns the full raw PCM float array of however much was captured.
+ */
+private suspend fun recordAudioWithDuration(
+    context: Context,
+    maxSeconds: Int,
+    isStillRecording: () -> Boolean
+): FloatArray = withContext(Dispatchers.IO) {
+    val maxSamples = SAMPLE_RATE * maxSeconds
+    val minBufferSize = AudioRecord.getMinBufferSize(
+        SAMPLE_RATE,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT
+    )
+    val chunkSize = maxOf(minBufferSize, SAMPLE_RATE / 4) // read in 250ms chunks
+    val audioRecord = AudioRecord(
+        MediaRecorder.AudioSource.MIC,
+        SAMPLE_RATE,
+        AudioFormat.CHANNEL_IN_MONO,
+        AudioFormat.ENCODING_PCM_16BIT,
+        chunkSize * 2
+    )
 
-private fun stopRecording() {
-    mediaRecorder?.apply {
-        stop()
-        release()
-    }
-    mediaRecorder = null
-}
-
-// ── API Call to Local Server ──
-private suspend fun uploadAudioForAnalysis(file: File): Pair<String, Float> = withContext(Dispatchers.IO) {
-    val client = OkHttpClient()
-    
-    // Using Localtunnel to completely bypass Android localhost/Wi-Fi/cleartext issues
-    // The Python server is securely exposed via this public HTTPS URL.
-    val url = "https://kisan-ai-audio.loca.lt/predict"
-
-    val requestBody = MultipartBody.Builder()
-        .setType(MultipartBody.FORM)
-        .addFormDataPart(
-            "audio",
-            file.name,
-            file.asRequestBody("audio/mp4".toMediaTypeOrNull())
-        )
-        .build()
-
-    val request = Request.Builder()
-        .url(url)
-        .header("Bypass-Tunnel-Reminder", "true")
-        .post(requestBody)
-        .build()
+    val allSamples = ArrayList<Float>(maxSamples)
+    val shortChunk = ShortArray(chunkSize)
 
     try {
-        client.newCall(request).execute().use { response ->
-            val responseData = response.body?.string() ?: ""
-            
-            if (!response.isSuccessful) {
-                val errorMsg = try { JSONObject(responseData).getString("error") } catch (e: Exception) { "HTTP ${response.code}" }
-                return@withContext Pair("ERR: $errorMsg".take(50), 0.0f)
+        audioRecord.startRecording()
+        while (isStillRecording() && allSamples.size < maxSamples) {
+            val read = audioRecord.read(shortChunk, 0, chunkSize)
+            if (read <= 0) break
+            for (i in 0 until read) {
+                allSamples.add(shortChunk[i].toFloat() / 32768.0f)
             }
-
-            val jsonObject = JSONObject(responseData)
-            
-            val label = jsonObject.getString("label")
-            val confidence = jsonObject.getDouble("confidence").toFloat()
-            
-            Pair(label, confidence)
         }
+    } catch (e: SecurityException) {
+        e.printStackTrace()
+    } finally {
+        audioRecord.stop()
+        audioRecord.release()
+    }
+
+    allSamples.toFloatArray()
+}
+
+// ── On-Device ML Inference (Sliding Window) ──
+private suspend fun analyzeAudioLocally(context: Context, audioData: FloatArray): Pair<String, Float> = withContext(Dispatchers.IO) {
+    try {
+        // Check overall energy first
+        var sumSquares = 0.0
+        for (sample in audioData) sumSquares += (sample * sample).toDouble()
+        val rms = kotlin.math.sqrt(sumSquares / audioData.size.coerceAtLeast(1)).toFloat()
+
+        if (rms < 0.02f || audioData.size < WINDOW_SAMPLES) {
+            val formattedRms = String.format("%.4f", rms)
+            return@withContext Pair("NO_AUDIO_$formattedRms", 0f)
+        }
+
+        // Load model once
+        val modelPath = assetFilePath(context, "chicken_model_lite.ptl")
+        val module = LiteModuleLoader.load(modelPath)
+
+        // Slide 1.5s windows with 50% overlap over the full recording
+        val stepSize = WINDOW_SAMPLES / 2
+        val classCounts = IntArray(3) // Healthy, Noise, Unhealthy
+        val classConfidences = FloatArray(3)
+        var windowsAnalyzed = 0
+
+        var offset = 0
+        while (offset + WINDOW_SAMPLES <= audioData.size) {
+            val window = audioData.copyOfRange(offset, offset + WINDOW_SAMPLES)
+            offset += stepSize
+
+            // Skip silent windows
+            var wSumSq = 0.0
+            for (s in window) wSumSq += (s * s).toDouble()
+            val wRms = kotlin.math.sqrt(wSumSq / WINDOW_SAMPLES).toFloat()
+            if (wRms < 0.02f) continue
+
+            // Run inference on this window
+            val tensor = org.pytorch.Tensor.fromBlob(window, longArrayOf(1, WINDOW_SAMPLES.toLong()))
+            val outputTensor = module.forward(org.pytorch.IValue.from(tensor)).toTensor()
+            val scores = outputTensor.dataAsFloatArray
+
+            // Softmax
+            var maxScore = scores[0]
+            var maxIdx = 0
+            for (i in 1 until 3) {
+                if (scores[i] > maxScore) { maxScore = scores[i]; maxIdx = i }
+            }
+            var sumExp = 0f
+            for (i in 0 until 3) sumExp += kotlin.math.exp((scores[i] - maxScore).toDouble()).toFloat()
+            val conf = kotlin.math.exp((scores[maxIdx] - maxScore).toDouble()).toFloat() / sumExp
+
+            classCounts[maxIdx]++
+            classConfidences[maxIdx] += conf
+            windowsAnalyzed++
+        }
+
+        if (windowsAnalyzed == 0) {
+            val formattedRms = String.format("%.4f", rms)
+            return@withContext Pair("NO_AUDIO_$formattedRms", 0f)
+        }
+
+        // Majority vote — if ANY window says Unhealthy, prioritise it
+        val finalIdx = when {
+            classCounts[2] > 0 -> 2 // Unhealthy wins if detected at all
+            classCounts[0] >= classCounts[1] -> 0 // Healthy
+            else -> 1 // Noise
+        }
+        val avgConf = if (classCounts[finalIdx] > 0)
+            classConfidences[finalIdx] / classCounts[finalIdx]
+        else 0f
+
+        val classes = arrayOf("Healthy", "Noise", "Unhealthy")
+        Pair(classes[finalIdx], avgConf)
+
     } catch (e: Exception) {
         e.printStackTrace()
-        Pair("ERR: ${e.message?.take(30)}", 0.0f)
+        Pair("ERR: ${e.message?.take(30)}", 0f)
     }
 }
