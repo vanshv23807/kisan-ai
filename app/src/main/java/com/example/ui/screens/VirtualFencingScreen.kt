@@ -65,7 +65,7 @@ fun VirtualFencingScreen(onBack: () -> Unit) {
     val detector = remember {
         val options = ObjectDetector.ObjectDetectorOptions.builder()
             .setMaxResults(5)
-            .setScoreThreshold(0.3f)
+            .setScoreThreshold(0.2f)
             .build()
         try {
             ObjectDetector.createFromFileAndOptions(context, "mobilenet_ssd.tflite", options)
@@ -97,14 +97,14 @@ fun VirtualFencingScreen(onBack: () -> Unit) {
                     
                     val scaleBackX = frame.width / 300f
                     val scaleBackY = frame.height / 300f
-                    initialDetections = results?.map { det ->
+                    initialDetections = applyNMS(results?.map { det ->
                         val origBox = det.boundingBox
                         origBox.left = origBox.left * scaleBackX
                         origBox.top = origBox.top * scaleBackY
                         origBox.right = origBox.right * scaleBackX
                         origBox.bottom = origBox.bottom * scaleBackY
                         det
-                    } ?: emptyList()
+                    } ?: emptyList())
                     smallBmp.recycle()
                 }
 
@@ -141,21 +141,21 @@ fun VirtualFencingScreen(onBack: () -> Unit) {
                     while (isMonitoring) {
                         val frame = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST)
                         if (frame != null) {
-                            if (frameCount % 3 == 0) {
+                            if (frameCount % 2 == 0) {
                                 val smallBmp = Bitmap.createScaledBitmap(frame, 300, 300, false)
                                 val tensorImage = TensorImage.fromBitmap(smallBmp)
                                 val results = detector.detect(tensorImage)
                                 
                                 val scaleBackX = frame.width / 300f
                                 val scaleBackY = frame.height / 300f
-                                cachedDetections = results?.map { det ->
+                                cachedDetections = applyNMS(results?.map { det ->
                                     val origBox = det.boundingBox
                                     origBox.left = origBox.left * scaleBackX
                                     origBox.top = origBox.top * scaleBackY
                                     origBox.right = origBox.right * scaleBackX
                                     origBox.bottom = origBox.bottom * scaleBackY
                                     det
-                                } ?: emptyList()
+                                } ?: emptyList())
                                 smallBmp.recycle()
                             }
                             
@@ -299,7 +299,7 @@ fun VirtualFencingScreen(onBack: () -> Unit) {
 
                             if (currentFence != null) {
                                 val dist = pointLineDistance(Offset(feetX, feetY), currentFence.first, currentFence.second)
-                                if (dist < 40f) {
+                                if (dist < 65f) {
                                     breachDetected = true
                                     drawRect(
                                         color = Color.Red,
@@ -450,3 +450,40 @@ private fun pointLineDistance(p: Offset, a: Offset, b: Offset): Float {
     if (dotProduct > normalLength * normalLength) return kotlin.math.hypot(p.x - b.x, p.y - b.y)
     return distance
 }
+
+// Non-Maximum Suppression — removes overlapping duplicate boxes, keeps the best one per cow
+private fun applyNMS(detections: List<Detection>, iouThreshold: Float = 0.4f): List<Detection> {
+    if (detections.isEmpty()) return emptyList()
+
+    // Sort by confidence (highest first)
+    val sorted = detections.sortedByDescending { it.categories.firstOrNull()?.score ?: 0f }
+    val kept = mutableListOf<Detection>()
+    val suppressed = BooleanArray(sorted.size)
+
+    for (i in sorted.indices) {
+        if (suppressed[i]) continue
+        kept.add(sorted[i])
+        for (j in i + 1 until sorted.size) {
+            if (suppressed[j]) continue
+            if (computeIoU(sorted[i].boundingBox, sorted[j].boundingBox) > iouThreshold) {
+                suppressed[j] = true
+            }
+        }
+    }
+    return kept
+}
+
+private fun computeIoU(a: android.graphics.RectF, b: android.graphics.RectF): Float {
+    val interLeft = maxOf(a.left, b.left)
+    val interTop = maxOf(a.top, b.top)
+    val interRight = minOf(a.right, b.right)
+    val interBottom = minOf(a.bottom, b.bottom)
+
+    val interArea = maxOf(0f, interRight - interLeft) * maxOf(0f, interBottom - interTop)
+    if (interArea == 0f) return 0f
+
+    val areaA = (a.right - a.left) * (a.bottom - a.top)
+    val areaB = (b.right - b.left) * (b.bottom - b.top)
+    return interArea / (areaA + areaB - interArea)
+}
+

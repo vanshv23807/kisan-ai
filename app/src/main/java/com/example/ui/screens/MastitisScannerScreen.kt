@@ -320,12 +320,7 @@ fun MastitisScannerScreen(
                                 )
                             }
 
-                            // Corner brackets to simulate viewfinder
-                            Box(
-                                modifier = Modifier
-                                    .size(180.dp, 140.dp)
-                                    .border(2.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                            )
+                            // Removed viewfinder border box as requested
                         }
                     }
                 }

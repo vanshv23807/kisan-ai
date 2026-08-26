@@ -250,17 +250,19 @@ fun KisanApp(viewModel: KisanViewModel) {
                             // Main Tabs
                             Scaffold(
                                 topBar = {
-                                    KisanTopAppBar(
-                                        title = "KisanAI",
-                                        showFarmerAvatar = true,
-                                        unreadNotificationCount = unreadNotificationCount,
-                                        onAvatarClick = {
-                                            viewModel.navigateToSubScreen(SubScreen.USER_PROFILE)
-                                        },
-                                        onNotificationClick = {
-                                            viewModel.navigateToSubScreen(SubScreen.NOTIFICATIONS)
-                                        }
-                                    )
+                                    if (currentTab == MainTab.HOME) {
+                                        KisanTopAppBar(
+                                            title = "KisanAI",
+                                            showFarmerAvatar = true,
+                                            unreadNotificationCount = unreadNotificationCount,
+                                            onAvatarClick = {
+                                                viewModel.navigateToSubScreen(SubScreen.USER_PROFILE)
+                                            },
+                                            onNotificationClick = {
+                                                viewModel.navigateToSubScreen(SubScreen.NOTIFICATIONS)
+                                            }
+                                        )
+                                    }
                                 },
                                 bottomBar = {
                                     KisanBottomBar(

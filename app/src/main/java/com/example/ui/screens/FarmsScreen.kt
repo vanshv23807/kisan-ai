@@ -401,8 +401,8 @@ fun FarmsScreen(
                                 Text("5. Land Ownership Status *", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 val ownershipOptions = listOf("Ancestral Owned", "Leased Land", "Sharecropping Contract", "Govt Allotted")
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    ownershipOptions.forEach { opt ->
+                                LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    items(ownershipOptions) { opt ->
                                         val isSel = ownership == opt
                                         FilterChip(
                                             selected = isSel,
