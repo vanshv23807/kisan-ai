@@ -1,5 +1,6 @@
 package com.example.ui.theme
 
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -57,6 +58,31 @@ fun KisanAITheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    androidx.compose.runtime.DisposableEffect(darkTheme) {
+        if (context is androidx.activity.ComponentActivity) {
+            context.enableEdgeToEdge(
+                statusBarStyle = if (darkTheme) {
+                    androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                } else {
+                    androidx.activity.SystemBarStyle.light(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT
+                    )
+                },
+                navigationBarStyle = if (darkTheme) {
+                    androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                } else {
+                    androidx.activity.SystemBarStyle.light(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT
+                    )
+                }
+            )
+        }
+        onDispose {}
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

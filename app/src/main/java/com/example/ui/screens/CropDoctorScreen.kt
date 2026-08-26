@@ -133,7 +133,7 @@ fun CropDoctorScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Gemini AI Disease & Deficiency Detector",
+                                text = "AI Disease & Deficiency Detector",
                                 fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryGreen
@@ -272,7 +272,7 @@ fun CropDoctorScreen(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "$selectedCropName Leaf • Gemini Vision Ready",
+                                        text = "$selectedCropName Leaf • AI Vision Ready",
                                         fontSize = 11.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
@@ -316,7 +316,7 @@ fun CropDoctorScreen(
                 }
             }
 
-            // Prominent "Analyze Symptoms with Gemini AI" Action Button
+            // Prominent "Analyze Symptoms with AI" Action Button
             item {
                 Card(
                     modifier = Modifier
@@ -342,7 +342,7 @@ fun CropDoctorScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Analyzing Leaf with Gemini AI API...",
+                                text = "Analyzing Leaf with AI API...",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -374,7 +374,7 @@ fun CropDoctorScreen(
                                 }
                                 Column {
                                     Text(
-                                        text = "Analyze Symptoms with Gemini AI",
+                                        text = "Analyze Symptoms with AI",
                                         fontSize = 17.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.White
@@ -444,7 +444,7 @@ fun CropDoctorScreen(
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                // Visual Symptoms Explanation by Gemini AI
+                                // Visual Symptoms Explanation by AI
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -462,7 +462,7 @@ fun CropDoctorScreen(
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
                                         Text(
-                                            text = "Gemini AI Visual Pathology Analysis",
+                                            text = "AI Visual Pathology Analysis",
                                             fontSize = 12.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = PrimaryGreen
@@ -539,7 +539,7 @@ fun CropDoctorScreen(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("Gemini AI Scan Result", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = PrimaryGreen)
+                            Text("AI Scan Result", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = PrimaryGreen)
                             Text(diagnosisResult, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface, lineHeight = 18.sp)
                         }
                     }
@@ -570,7 +570,7 @@ fun CropDoctorScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Click 'Analyze Symptoms with Gemini AI' above to scan the crop leaf and receive real-time diagnosis & prescription.",
+                                text = "Click 'Analyze Symptoms with AI' above to scan the crop leaf and receive real-time diagnosis & prescription.",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center

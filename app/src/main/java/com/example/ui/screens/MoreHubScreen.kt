@@ -4,16 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +30,17 @@ import com.example.ui.viewmodel.SubScreen
 fun MoreHubScreen(
     onNavigateSubScreen: (SubScreen) -> Unit
 ) {
+    var showHelplineDialog by remember { mutableStateOf(false) }
+
+    if (showHelplineDialog) {
+        FarmerEmergencyHelplinesDialog(
+            onDismiss = { showHelplineDialog = false },
+            onReportDamageClick = { 
+                showHelplineDialog = false
+                onNavigateSubScreen(SubScreen.GOVT_SCHEMES)
+            }
+        )
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -53,11 +66,9 @@ fun MoreHubScreen(
 
         item {
             HubNavigationCard(
-                titleLine1 = "Farm Finance &",
-                titleLine2 = "Accounting Logs",
-                subtitle = "Track expenses, profits & financial health",
+                titleLine1 = "Farm Accounting",
+                titleLine2 = "",
                 icon = Icons.Default.AccountBalanceWallet,
-                badge = "Finance",
                 testTag = "hub_finance_item",
                 onClick = { onNavigateSubScreen(SubScreen.FINANCE_DASHBOARD) }
             )
@@ -67,47 +78,39 @@ fun MoreHubScreen(
             HubNavigationCard(
                 titleLine1 = "Livestock & Crop",
                 titleLine2 = "Overview Registry",
-                subtitle = "View crops, cattle, poultry & farm assets in real time",
                 icon = Icons.Default.Pets,
-                badge = "Overview",
                 testTag = "hub_livestock_item",
                 onClick = { onNavigateSubScreen(SubScreen.LIVESTOCK_LIST) }
             )
         }
 
-        item {
+item {
             HubNavigationCard(
-                titleLine1 = "Crop Growth &",
-                titleLine2 = "Stage Progress Tracker",
-                subtitle = "Track crops from sowing to harvest with stage progression",
-                icon = Icons.Default.Timeline,
-                badge = "Growth",
-                testTag = "hub_crop_tracker_item",
-                onClick = { onNavigateSubScreen(SubScreen.CROP_GROWTH_TRACKER) }
+                titleLine1 = "Crop Insurance &",
+                titleLine2 = "Govt Payouts",
+                icon = Icons.Default.Shield,
+                testTag = "hub_insurance_item",
+                onClick = { onNavigateSubScreen(SubScreen.GOVT_SCHEMES) }
             )
         }
 
         item {
             HubNavigationCard(
-                titleLine1 = "AI Crop Doctor &",
-                titleLine2 = "Leaf Camera Scan",
-                subtitle = "Instant leaf scan & AI pathogen diagnosis",
-                icon = Icons.Default.CameraAlt,
-                badge = "AI Scan",
-                testTag = "hub_crop_doctor_item",
-                onClick = { onNavigateSubScreen(SubScreen.CROP_DOCTOR) }
+                titleLine1 = "Government Schemes &",
+                titleLine2 = "Subsidies",
+                icon = Icons.Default.AccountBalance,
+                testTag = "hub_schemes_item",
+                onClick = { onNavigateSubScreen(SubScreen.GOVT_SCHEMES) }
             )
         }
 
         item {
             HubNavigationCard(
-                titleLine1 = "Today's AI Plan &",
-                titleLine2 = "Farm Notifications",
-                subtitle = "Prioritized farm tasks & action triggers",
-                icon = Icons.Default.TaskAlt,
-                badge = "Alerts",
-                testTag = "hub_tasks_item",
-                onClick = { onNavigateSubScreen(SubScreen.TASKS_LIST) }
+                titleLine1 = "Farmer Emergency &",
+                titleLine2 = "Helplines",
+                icon = Icons.Default.PhoneInTalk,
+                testTag = "hub_helpline_item",
+                onClick = { showHelplineDialog = true }
             )
         }
 
@@ -115,9 +118,7 @@ fun MoreHubScreen(
             HubNavigationCard(
                 titleLine1 = "App Settings &",
                 titleLine2 = "Farmer Profile",
-                subtitle = "5 Languages, Light/Dark mode, Account",
                 icon = Icons.Default.Settings,
-                badge = null,
                 testTag = "hub_settings_item",
                 onClick = { onNavigateSubScreen(SubScreen.SETTINGS) }
             )
@@ -129,9 +130,7 @@ fun MoreHubScreen(
 private fun HubNavigationCard(
     titleLine1: String,
     titleLine2: String,
-    subtitle: String,
     icon: ImageVector,
-    badge: String?,
     testTag: String,
     onClick: () -> Unit
 ) {
@@ -155,7 +154,6 @@ private fun HubNavigationCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // Left Green Background Block (52dp fixed size)
                 Box(
                     modifier = Modifier
                         .size(52.dp)
@@ -174,7 +172,6 @@ private fun HubNavigationCard(
                 Spacer(modifier = Modifier.width(14.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    // Two-line title in green background look
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -189,24 +186,18 @@ private fun HubNavigationCard(
                                 color = PrimaryGreen,
                                 lineHeight = 18.sp
                             )
-                            Text(
-                                text = titleLine2,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryGreen,
-                                lineHeight = 18.sp
-                            )
+                            if (titleLine2.isNotEmpty()) {
+                                Text(
+                                    text = titleLine2,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryGreen,
+                                    lineHeight = 18.sp
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = subtitle,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 16.sp
-                    )
                 }
             }
 

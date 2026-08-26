@@ -58,7 +58,7 @@ fun FinanceScreen(
     Scaffold(
         topBar = {
             KisanTopAppBar(
-                title = "Farm Finance & Accounting",
+                title = "Farm Accounting",
                 showBackButton = true,
                 onBackClick = onBack
             )
@@ -93,7 +93,7 @@ fun FinanceScreen(
                     ) {
                         Icon(imageVector = Icons.Default.RemoveCircle, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("- Add Expense", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Add Expense", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
 
                     Button(
@@ -110,7 +110,7 @@ fun FinanceScreen(
                     ) {
                         Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, tint = Color.White)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("+ Add Profit / Revenue", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text("Add Profit / Revenue", fontSize = 13.5.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

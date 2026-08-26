@@ -271,7 +271,7 @@ fun LivestockScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                                 Box(
                                     modifier = Modifier
                                         .size(52.dp)
@@ -289,7 +289,7 @@ fun LivestockScreen(
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = crop.cropName,
                                         fontSize = 16.sp,
@@ -348,7 +348,7 @@ fun LivestockScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                                 Box(
                                     modifier = Modifier
                                         .size(52.dp)
@@ -366,7 +366,7 @@ fun LivestockScreen(
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
                                             text = animal.name,

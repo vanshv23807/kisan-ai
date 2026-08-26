@@ -401,8 +401,8 @@ fun FarmsScreen(
                                 Text("5. Land Ownership Status *", fontSize = 12.5.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 val ownershipOptions = listOf("Ancestral Owned", "Leased Land", "Sharecropping Contract", "Govt Allotted")
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    ownershipOptions.forEach { opt ->
+                                LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    items(ownershipOptions) { opt ->
                                         val isSel = ownership == opt
                                         FilterChip(
                                             selected = isSel,
@@ -1831,7 +1831,7 @@ fun FarmsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text(
                             text = "My Farms (${farms.size})",
                             fontSize = 20.sp,
@@ -1854,7 +1854,7 @@ fun FarmsScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryGreen, contentColor = Color.White),
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                     ) {
-                        Text("+ Add Farm", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+                        Text("+ Add Farm", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White, maxLines = 1)
                     }
                 }
             }

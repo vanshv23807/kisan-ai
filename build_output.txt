@@ -1,0 +1,33 @@
+Reusing configuration cache.
+> Task :app:preBuild UP-TO-DATE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:processDebugGoogleServices UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugMainManifest FROM-CACHE
+> Task :app:processDebugManifest FROM-CACHE
+> Task :app:processDebugManifestForPackage FROM-CACHE
+> Task :app:processDebugResources FROM-CACHE
+> Task :app:kspDebugKotlin
+
+> Task :app:compileDebugKotlin
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/data/local/AppDatabase.kt:47:22 'fun fallbackToDestructiveMigration(): RoomDatabase.Builder<AppDatabase>' is deprecated. Replace by overloaded version with parameter to indicate if all tables should be dropped or not.
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/ui/components/KisanTopAppBar.kt:62:57 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/ui/screens/CctvMonitorScreen.kt:51:40 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/ui/screens/HomeScreen.kt:148:44 'val Icons.Filled.ArrowForward: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowForward.
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/ui/screens/MarketScreen.kt:301:79 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/ui/screens/MarketScreen.kt:514:61 'val Icons.Filled.TrendingUp: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.TrendingUp.
+w: file:///Users/visheshverma/Documents/AGRI/kisan-ai/app/src/main/java/com/example/ui/screens/components/FertilizerCalculatorSection.kt:389:36 'val Icons.Filled.PlaylistAddCheck: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.PlaylistAddCheck.
+
+BUILD SUCCESSFUL in 21s
+17 actionable tasks: 2 executed, 4 from cache, 11 up-to-date
+Configuration cache entry reused.
