@@ -23,11 +23,32 @@ object GeminiFarmAgent {
         .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
+    // Holds user custom entered API key if configured in-app or through preferences
+    @Volatile
+    var customApiKey: String? = null
+
+    /**
+     * Resolves the active Gemini API key in order:
+     * 1. In-app custom key entered by user in Settings or Chat screen
+     * 2. BuildConfig.GEMINI_API_KEY generated from environment / .env
+     */
+    fun getActiveApiKey(): String {
+        val custom = customApiKey?.trim()
+        if (!custom.isNullOrBlank() && custom != "YOUR_GEMINI_API_KEY") {
+            return custom
+        }
+        val buildKey = BuildConfig.GEMINI_API_KEY.trim()
+        if (buildKey.isNotBlank() && buildKey != "MY_GEMINI_API_KEY" && buildKey != "YOUR_GEMINI_API_KEY" && !buildKey.contains("DummyPlaceholder")) {
+            return buildKey
+        }
+        return ""
+    }
+
     suspend fun analyzeCropLeafWithGemini(
         bitmap: Bitmap?,
         cropName: String = "Wheat"
     ): CropPathologyResult = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        val apiKey = getActiveApiKey()
         val base64Image = bitmap?.let {
             try {
                 val outputStream = ByteArrayOutputStream()
@@ -38,7 +59,7 @@ object GeminiFarmAgent {
             }
         }
 
-        if (apiKey.isNullOrBlank() || apiKey == "MY_GEMINI_API_KEY") {
+        if (apiKey.isBlank()) {
             return@withContext getFallbackPathologyResult(cropName)
         }
 
@@ -199,8 +220,8 @@ object GeminiFarmAgent {
         livestock: List<Livestock>,
         tasks: List<FarmTask>
     ): String = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        if (apiKey.isNullOrBlank() || apiKey == "MY_GEMINI_API_KEY") {
+        val apiKey = getActiveApiKey()
+        if (apiKey.isBlank()) {
             // Intelligent domain expert fallback for immediate offline/reliable answers
             return@withContext generateLocalExpertResponse(prompt, parcels, livestock)
         }
@@ -296,7 +317,7 @@ object GeminiFarmAgent {
         bitmap: Bitmap?,
         cropHint: String = ""
     ): CropGrowthVisionAnalysis = withContext(Dispatchers.IO) {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+        val apiKey = getActiveApiKey()
         val base64Image = bitmap?.let {
             try {
                 val outputStream = ByteArrayOutputStream()
@@ -307,7 +328,7 @@ object GeminiFarmAgent {
             }
         }
 
-        if (apiKey.isNullOrBlank() || apiKey == "MY_GEMINI_API_KEY") {
+        if (apiKey.isBlank()) {
             return@withContext getFallbackGrowthVisionResult(cropHint)
         }
 

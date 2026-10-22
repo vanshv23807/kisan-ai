@@ -1648,6 +1648,35 @@ class KisanViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Gemini API Key Management
+    private val _userGeminiApiKey = MutableStateFlow("")
+    val userGeminiApiKey: StateFlow<String> = _userGeminiApiKey.asStateFlow()
+
+    fun updateGeminiApiKey(key: String) {
+        val trimmed = key.trim()
+        _userGeminiApiKey.value = trimmed
+        GeminiFarmAgent.customApiKey = trimmed
+        try {
+            val prefs = getApplication<Application>().getSharedPreferences("kisan_ai_settings", android.content.Context.MODE_PRIVATE)
+            prefs.edit().putString("gemini_api_key", trimmed).apply()
+        } catch (e: Exception) {
+            // ignore
+        }
+    }
+
+    init {
+        try {
+            val prefs = getApplication<Application>().getSharedPreferences("kisan_ai_settings", android.content.Context.MODE_PRIVATE)
+            val savedKey = prefs.getString("gemini_api_key", "") ?: ""
+            if (savedKey.isNotBlank()) {
+                _userGeminiApiKey.value = savedKey
+                GeminiFarmAgent.customApiKey = savedKey
+            }
+        } catch (e: Exception) {
+            // ignore
+        }
+    }
+
     fun calculateFertilizerRecommendation(
         cropName: String,
         fieldArea: Double,

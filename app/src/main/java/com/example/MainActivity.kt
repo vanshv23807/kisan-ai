@@ -229,10 +229,13 @@ fun KisanApp(viewModel: KisanViewModel) {
                             )
                         }
                         SubScreen.SETTINGS -> {
+                            val userGeminiApiKey by viewModel.userGeminiApiKey.collectAsStateWithLifecycle()
                             SettingsScreen(
                                 userProfile = userProfile,
                                 currentLanguage = currentLanguage,
                                 isDarkTheme = isDarkTheme,
+                                geminiApiKey = userGeminiApiKey,
+                                onGeminiApiKeyChange = { viewModel.updateGeminiApiKey(it) },
                                 onLanguageChange = { viewModel.setLanguage(it) },
                                 onToggleTheme = { viewModel.toggleTheme() },
                                 onBack = { viewModel.navigateBack() }
